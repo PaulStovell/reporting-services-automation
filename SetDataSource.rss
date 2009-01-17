@@ -1,0 +1,27 @@
+' Example:
+' rs -i SetDataSource.rss -s http://localhost/ReportServer -v report="/Full/Path/To/My Report" -v reportDataSourceName="dsMySource" -v dataSource="/Full/Path/To/MyDS"
+
+Public Sub Main()
+    rs.Credentials = System.Net.CredentialCache.DefaultCredentials
+    
+    If not report.StartsWith("/") Then
+        report = "/" & report
+    End If
+    If not dataSource.StartsWith("/") Then
+        dataSource = "/" & dataSource
+    End If
+
+    SetDataSource(report, reportDataSourceName, dataSource)
+End Sub
+
+Public Sub SetDataSource(report as string, reportDataSourceName as string, dataSource as string)    
+    Dim sources as DataSource() = rs.GetItemDataSources(report)
+    for each source as DataSource in sources
+        if source.Name.ToLower() = reportDataSourceName.ToLower() then
+            dim sharedReference as new DataSourceReference()
+            sharedReference.Reference = dataSource
+            source.Item = sharedReference
+        end if
+    next
+    rs.SetItemDataSources(report, sources)
+End Sub 

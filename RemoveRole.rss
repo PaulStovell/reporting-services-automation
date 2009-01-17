@@ -1,0 +1,55 @@
+' Example:
+' rs -i RemoveRole.rss -s http://localhost/ReportServer -v item="/Path/To/Item" -v userOrGroup="Company Management" -v role="Browser"
+
+Public Sub Main()
+    rs.Credentials = System.Net.CredentialCache.DefaultCredentials
+    If not item.StartsWith("/") Then
+        item = "/" & item
+    End If
+
+    RemoveRole(item, userOrGroup, role)
+End Sub
+
+Public Sub RemoveRole(item as string, userOrGroup as string, role as string)
+    dim existingPolicies as Policy() = rs.GetPolicies(item, True)
+    rs.SetPolicies(item, RebuildPolicy(userOrGroup, role, existingPolicies))
+End Sub
+
+Public Function RebuildPolicy(userOrGroup as String, role as String, existingPolicies as Policy()) as Policy()
+    Dim newPolicies as new System.Collections.ArrayList()
+    Dim policyToChange as Policy = Nothing
+    if existingPolicies isnot nothing then
+        for each existingPolicy as Policy in existingPolicies
+            newPolicies.Add(existingPolicy)
+            if userOrGroup.ToLower() = existingPolicy.GroupUserName.ToLower() or existingPolicy.GroupUserName.ToLower().EndsWith("\" & userOrGroup.ToLower()) then 
+                policyToChange = existingPolicy
+                exit for
+            end if
+        next
+    end if 
+    
+    if policyToChange is Nothing then
+        policyToChange = new Policy()
+        newPolicies.Add(policyToChange)
+    end if
+
+    policyToChange.GroupUserName = userOrGroup
+    policyToChange.Roles = RemoveRole(role, policyToChange.Roles)   
+
+    return CType(newPolicies.ToArray(GetType(Policy)), Policy())
+End Function
+
+Public Function RemoveRole(role as String, existingRoles as Role()) as Role()
+    Dim newRoles as new System.Collections.ArrayList()
+    Dim roleToChange as Role = Nothing
+    if existingRoles isnot nothing then
+        for each existingRole as Role in existingRoles
+            if not existingRole.Name.ToLower() = role.ToLower() then 
+                newRoles.Add(existingRole)
+            end if
+        next
+    end if
+    return CType(newRoles.ToArray(GetType(Role)), Role())
+End Function
+
+

@@ -1,0 +1,29 @@
+' Example:
+' rs -i RemoveAllRoles.rss -s http://localhost/ReportServer -v item="/Path/To/Item" -v userOrGroup="Company Management"
+
+Public Sub Main()
+    rs.Credentials = System.Net.CredentialCache.DefaultCredentials
+    If not item.StartsWith("/") Then
+        item = "/" & item
+    End If
+
+    RemoveAllRoles(item, userOrGroup)
+End Sub
+
+Public Sub RemoveAllRoles(item as string, userOrGroup as string)
+    dim existingPolicies as Policy() = rs.GetPolicies(item, True)
+    rs.SetPolicies(item, RebuildPolicy(userOrGroup, existingPolicies))
+End Sub
+
+Public Function RebuildPolicy(userOrGroup as String, existingPolicies as Policy()) as Policy()
+    Dim newPolicies as new System.Collections.ArrayList()
+    if existingPolicies isnot nothing then
+        for each existingPolicy as Policy in existingPolicies
+            if not userOrGroup.ToLower() = existingPolicy.GroupUserName.ToLower() and not existingPolicy.GroupUserName.ToLower().EndsWith("\" & userOrGroup.ToLower()) then 
+                newPolicies.Add(existingPolicy)
+            end if
+        next
+    end if 
+    
+    return CType(newPolicies.ToArray(GetType(Policy)), Policy())
+End Function

@@ -1,0 +1,23 @@
+' Example:
+' rs -i UploadReport.rss -s http://localhost/ReportServer -v path="/Path/To/Data/Source/Folder"  -v reportName="My Report"  -v reportSourceFile="C:\myreport.rdl"
+
+Public Sub Main()
+    rs.Credentials = System.Net.CredentialCache.DefaultCredentials
+    
+    If not path.StartsWith("/") Then
+        path = "/" & path
+    End If
+
+    PublishReport(reportName, path, reportSourceFile)
+End Sub
+
+Public Sub PublishReport(ByVal reportFilePath as string, byval path as string, byval reportSourceFile as string)
+    Dim definition As [Byte]() = Nothing
+    
+    Dim stream As FileStream = File.OpenRead(reportSourceFile)
+    definition = New [Byte](stream.Length) {}
+    stream.Read(definition, 0, CInt(stream.Length))
+    stream.Close()
+
+    rs.CreateReport(reportName, path, True, definition, Nothing)
+End Sub 

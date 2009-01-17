@@ -1,0 +1,33 @@
+' Example:
+' rs -i CreateFolder.rss -s http://localhost/ReportServer -v path="/Path/To/Folder/To/Create"
+
+Public Sub Main()
+    rs.Credentials = System.Net.CredentialCache.DefaultCredentials
+    If path.StartsWith("/") Then
+        path = path.Substring(1)
+    End If
+
+    CreateFolder(path)
+End Sub
+
+Public Sub CreateFolder(ByVal folderPath as String) 
+    Dim parentDirectoryName = System.IO.Path.GetDirectoryName(folderPath).Replace("\", "/")
+    Dim directoryName = System.IO.Path.GetFileName(folderPath)
+ 
+    if not parentDirectoryName = nothing then
+        CreateFolder(parentDirectoryName)        
+    end if 
+
+    Dim exists as Boolean = false
+    try 
+        if rs.GetItemType("/" & folderPath) = ItemTypeEnum.Folder then
+            exists = true
+        end if
+    catch ex as exception 
+        ' Ignore
+    end try
+
+    if not exists then
+        rs.CreateFolder(directoryName, "/" & parentDirectoryName, Nothing)
+    end if
+End Sub

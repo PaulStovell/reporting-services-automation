@@ -1,0 +1,28 @@
+' Example:
+' rs -i CreateDataSource.rss -s http://localhost/ReportServer -v dataSourceName="MyDataSource" -v connectionString="server=(local);database=myDatabase" -v path="/Path/To/Data/Source/Folder"
+
+Public Sub Main()
+    rs.Credentials = System.Net.CredentialCache.DefaultCredentials
+    If not path.StartsWith("/") Then
+        path = "/" & path
+    End If
+
+    CreateDataSource(dataSourceName, "SQL", connectionString)
+End Sub
+
+Public Sub CreateDataSource(name As String, extension As String, connectionString As String)
+    'Define the data source definition.
+    Dim definition As New DataSourceDefinition()
+    definition.CredentialRetrieval = CredentialRetrievalEnum.Integrated
+    definition.ConnectString = connectionString
+    definition.Enabled = True
+    definition.EnabledSpecified = True
+    definition.Extension = extension
+    definition.ImpersonateUser = False
+    definition.ImpersonateUserSpecified = True
+    'Use the default prompt string.
+    definition.Prompt = Nothing
+    definition.WindowsCredentials = False
+
+    rs.CreateDataSource(name, path, True, definition, Nothing)
+End Sub

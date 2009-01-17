@@ -1,0 +1,62 @@
+' Example:
+' rs -i GrantRole.rss -s http://localhost/ReportServer -v item="/Path/To/Item" -v userOrGroup="Company Management" -v role="Browser"
+
+Public Sub Main()
+    rs.Credentials = System.Net.CredentialCache.DefaultCredentials
+    If not item.StartsWith("/") Then
+        item = "/" & item
+    End If
+
+    GrantRole(item, userOrGroup, role)
+End Sub
+
+Public Sub GrantRole(item as string, userOrGroup as string, role as string)
+    dim existingPolicies as Policy() = rs.GetPolicies(item, True)
+    rs.SetPolicies(item, AddPolicy(userOrGroup, role, existingPolicies))
+End Sub
+
+Public Function AddPolicy(userOrGroup as String, role as String, existingPolicies as Policy()) as Policy()
+    Dim newPolicies as new System.Collections.ArrayList()
+    Dim policyToChange as Policy = Nothing
+    if existingPolicies isnot nothing then
+        for each existingPolicy as Policy in existingPolicies
+            newPolicies.Add(existingPolicy)
+            if userOrGroup.ToLower() = existingPolicy.GroupUserName.ToLower() or existingPolicy.GroupUserName.ToLower().EndsWith("\" & userOrGroup.ToLower()) then 
+                policyToChange = existingPolicy
+                exit for
+            end if
+        next
+    end if 
+    
+    if policyToChange is Nothing then
+        policyToChange = new Policy()
+        newPolicies.Add(policyToChange)
+    end if
+
+    policyToChange.GroupUserName = userOrGroup
+    policyToChange.Roles = AddRole(role, policyToChange.Roles)
+
+    return CType(newPolicies.ToArray(GetType(Policy)), Policy())
+End Function
+
+Public Function AddRole(role as String, existingRoles as Role()) as Role()
+    Dim newRoles as new System.Collections.ArrayList()
+    Dim roleToChange as Role = Nothing
+    if existingRoles isnot nothing then
+        for each existingRole as Role in existingRoles
+            newRoles.Add(existingRole)
+            if existingRole.Name.ToLower() = role.ToLower() then 
+                roleToChange = existingRole
+                return existingRoles
+            end if
+        next
+    end if 
+    if roleToChange is Nothing then
+        roleToChange = new Role()
+        newRoles.Add(roleToChange)
+    end if
+    roleToChange.Name = role
+    return CType(newRoles.ToArray(GetType(Role)), Role())
+End Function
+
+
